@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DevSecOps Maturity Assessment</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#ffffff; --ink:#0f172a; --muted:#64748b;
+    --line:#e2e8f0; --accent:#2563eb; --accent-soft:#eff6ff;
+    --basic:#ef4444; --emerging:#f59e0b; --mature:#10b981; --na:#94a3b8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f8fafc;color:var(--ink);line-height:1.5}
+  header{background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;padding:28px 32px}
+  header h1{margin:0 0 6px;font-size:24px;letter-spacing:-.2px}
+  header p{margin:0;opacity:.8;font-size:14px}
+  .layout{display:grid;grid-template-columns:1fr 340px;gap:24px;padding:24px 32px;max-width:1400px;margin:0 auto}
+  @media (max-width:1024px){.layout{grid-template-columns:1fr}}
+  .meta{background:var(--panel);padding:20px;border-radius:12px;border:1px solid var(--line);margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .meta label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+  .meta input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit}
+  .area{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden}
+  .area-header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#f8fafc;border-bottom:1px solid var(--line)}
+  .area-header h2{margin:0;font-size:17px}
+  .area-header .area-score{font-size:13px;color:var(--muted)}
+  .area-body{padding:8px 20px 20px}
+  .cap{padding:16px 0;border-bottom:1px solid var(--line)}
+  .cap:last-child{border-bottom:none}
+  .cap-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:10px}
+  .cap-title{font-weight:600;font-size:15px;margin-bottom:4px}
+  .cap-desc{font-size:13px;color:var(--muted)}
+  .cap select{min-width:200px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;background:#fff}
+  .levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+  .level{padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;background:#fafafa}
+  .level b{display:block;color:var(--accent);margin-bottom:2px}
+  .sidebar{position:sticky;top:16px;height:fit-content}
+  .score-card{background:var(--panel);padding:20px;border-radius:12px;border:1px solid var(--line);margin-bottom:16px}
+  .score-card h3{margin:0 0 12px;font-size:15px}
+  .overall{text-align:center;padding:16px;border-radius:10px;margin-bottom:12px}
+  .overall .label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;opacity:.9}
+  .overall .val{font-size:24px;font-weight:700;margin-top:4px}
+  .area-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .area-row:last-child{border-bottom:none}
+  .badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff}
+  .b-basic{background:var(--basic)} .b-emerging{background:var(--emerging)} .b-mature{background:var(--mature)} .b-na{background:var(--na)}
+  .actions{display:flex;flex-direction:column;gap:8px}
+  .btn{padding:10px 14px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500;font-family:inherit}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-secondary{background:var(--accent-soft);color:var(--accent);border:1px solid var(--line)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .recs{margin-top:20px;background:var(--panel);padding:24px;border-radius:12px;border:1px solid var(--line)}
+  .recs h2{margin:0 0 4px;font-size:18px}
+  .recs p.sub{margin:0 0 16px;color:var(--muted);font-size:13px}
+  .rec-item{padding:14px;background:#fff8ed;border-left:3px solid var(--emerging);border-radius:6px;margin-bottom:10px}
+  .rec-item.basic{background:#fef2f2;border-left-color:var(--basic)}
+  .rec-item.mature{background:#ecfdf5;border-left-color:var(--mature)}
+  .rec-item h4{margin:0 0 6px;font-size:14px}
+  .rec-item ul{margin:6px 0 0;padding-left:20px;font-size:13px}
+  .rec-item li{margin-bottom:3px}
+  @media print{
+    .sidebar,.actions,.btn,.area-header{position:static}
+    .level{display:none}
+    header{background:#1e3a8a !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .layout{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>DevSecOps Maturity Assessment</h1>
+  <p>Score capabilities across 6 DevSecOps workstreams and get tailored improvement recommendations.</p>
+</header>
+
+<div class="layout">
+  <div>
+    <div class="meta">
+      <div><label>Application Name</label><input id="appName" placeholder="e.g. Marie"/></div>
+      <div><label>Team / Owner</label><input id="team" placeholder="e.g. Platform Squad"/></div>
+      <div><label>Assessment Date</label><input type="date" id="assessDate"/></div>
+    </div>
+
+    <div id="assessment"></div>
+
+    <div class="recs" id="recsPanel" style="display:none">
+      <h2>Recommendations</h2>
+      <p class="sub">Generated from your answers — focused on the highest-impact improvements.</p>
+      <div id="recsList"></div>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="score-card">
+      <h3>Live Score</h3>
+      <div class="overall" id="overallCard" style="background:#f1f5f9">
+        <div class="label">Overall Maturity</div>
+        <div class="val" id="overallVal">—</div>
+      </div>
+      <div id="areaScores"></div>
+    </div>
+    <div class="score-card">
+      <h3>Actions</h3>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="generateRecs()">Generate Recommendations</button>
+        <button class="btn btn-secondary" onclick="window.print()">Export as PDF</button>
+        <button class="btn btn-secondary" onclick="exportJSON()">Save as JSON</button>
+        <button class="btn btn-ghost" onclick="loadJSON()">Load JSON</button>
+        <button class="btn btn-ghost" onclick="if(confirm('Reset all answers?'))location.reload()">Reset</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<input type="file" id="jsonLoader" accept=".json" style="display:none"/>
+
+<script>
+// === Assessment data — modernized from your Excel template ===
+const ASSESSMENT = [
+  {area:"Continuous Planning", caps:[
+    {id:"cp_board", title:"Agile Board Setup", desc:"Are work items tracked and visible?",
+      levels:["Not Applicable","No board — not tracked in Agile tools","Azure Boards/GitHub/JIRA with Epics, Features, Stories","Reporting & metrics (burn-down, velocity, dashboards)"]},
+    {id:"cp_wow", title:"Ways of Working", desc:"Is the team running a disciplined Agile process?",
+      levels:["Not Applicable","Ad hoc, no structured approach","Scrum/Kanban with daily stand-ups","Full ceremonies (grooming, retros, planning)"]},
+    {id:"cp_dora", title:"DORA Metrics", desc:"Deployment frequency, lead time, change fail rate, MTTR.",
+      levels:["Not Applicable","Not measured","Tracked manually or in spreadsheets","Automated dashboards driving improvement"]},
+  ]},
+  {area:"Continuous Integration", caps:[
+    {id:"ci_repo", title:"Repository Management", desc:"How are your Git repos governed?",
+      levels:["Not Applicable","Centralized, no policies","Policies defined (branch protection, PR templates)","Policies enforced (CODEOWNERS, signed commits, secret scanning)"]},
+    {id:"ci_branch", title:"Branching Strategy", desc:"How do developers collaborate on code?",
+      levels:["Not Applicable","Random commits, no strategy","Feature branches with PRs","Trunk-based / GitFlow with enforced merge rules"]},
+    {id:"ci_build", title:"Application Build / CI", desc:"How are builds triggered?",
+      levels:["Not Applicable","Manual builds","Automated CI on commits/PRs","Gated check-ins with required quality checks"]},
+    {id:"ci_sca", title:"Static Code Analysis (Sonar)", desc:"Code quality scanning in pipeline.",
+      levels:["Not Applicable","Not onboarded (Sonar not connected to repo)","Sonar runs in CI pipeline on every build (results in pipeline output)","Quality gate enforced on PR (bugs, smells, coverage thresholds block merge)"]},
+    {id:"ci_ut", title:"Unit Testing", desc:"Are unit tests written and run automatically?",
+      levels:["Not Applicable","No unit tests","Tests written, run manually","Tests integrated into CI build (auto-run on every commit/PR)"]},
+    {id:"ci_cov", title:"Code Coverage", desc:"Coverage measurement and gating.",
+      levels:["Not Applicable","No coverage measured","Coverage measured in CI pipeline (reports published)","Quality gate enforces minimum coverage threshold (blocks merge below threshold)"]},
+    {id:"ci_lint", title:"Pre-commit / Linting", desc:"Catch issues before they hit CI.",
+      levels:["Not Applicable","No linting/formatting in place","Linters configured but optional","Pre-commit hooks enforce lint/format (blocks commit if fails)"]},
+  ]},
+  {area:"Continuous Security", caps:[
+    {id:"cs_sast", title:"SAST (Snyk / CodeQL)", desc:"Static application security testing.",
+      levels:["Not Applicable","Not onboarded (Snyk not connected to repo)","Snyk runs in CI pipeline on every build (results in pipeline output)","Quality gate enforced on PR (severity thresholds block merge)"]},
+    {id:"cs_dast", title:"DAST", desc:"Dynamic application security testing.",
+      levels:["Not Applicable","Not onboarded (no DAST tool in use)","Manual security testing performed periodically","DAST runs automatically in CI/CD pipeline against staging/test environment"]},
+    {id:"cs_threat", title:"Threat Modelling", desc:"Is threat modelling a regular practice?",
+      levels:["Not Applicable","None performed","Ad-hoc for major releases","Routine threat modelling per feature / architecture change"]},
+    {id:"cs_secrets", title:"Secrets Scanning", desc:"Detect credentials in code & history.",
+      levels:["Not Applicable","Not onboarded (no secret scanning in place)","Repo-level secret scanning enabled (GitHub/Azure DevOps)","CI pipeline blocks merges on secret detection"]},
+    {id:"cs_deps", title:"Dependency / SCA Scanning", desc:"Detect vulnerable open-source libraries.",
+      levels:["Not Applicable","Not onboarded (dependencies not scanned)","SCA tool runs on schedule or in CI (findings visible)","Automated SCA with auto-PRs for fixes (Dependabot/Renovate) and severity gates"]},
+    {id:"cs_container", title:"Container Image Scanning", desc:"Scan Docker images for CVEs.",
+      levels:["Not Applicable","Not applicable (no containers used)","Image scanning enabled in registry or run manually","Registry + CI scans with policy enforcement (blocks deploy on critical CVEs)"]},
+    {id:"cs_iac", title:"IaC Security Scanning", desc:"Scan Terraform / ARM / Bicep for misconfigs.",
+      levels:["Not Applicable","Not onboarded (no IaC scanning, or no IaC in use)","Manual reviews / occasional scans","Checkov/tfsec/KICS integrated in CI (blocks bad configs)"]},
+    {id:"cs_sbom", title:"SBOM & Supply Chain", desc:"Software Bill of Materials generation.",
+      levels:["Not Applicable","Not generated","SBOM produced for releases (CycloneDX/SPDX format)","Signed SBOMs + SLSA provenance in CI"]},
+  ]},
+  {area:"Continuous Environment", caps:[
+    {id:"ce_app", title:"App Infrastructure as Code", desc:"How is app infra provisioned?",
+      levels:["Not Applicable","Manual via portal/CLI","Terraform/ARM used for auto-provisioning","Policy-first IaC (drift detection, PR gates)"]},
+    {id:"ce_db", title:"Database Infrastructure as Code", desc:"How is DB infra provisioned?",
+      levels:["Not Applicable","Not used","Manual but documented","Terraform/ARM, version-controlled, pipeline-integrated"]},
+    {id:"ce_secrets", title:"Secrets Management", desc:"Where do secrets live at runtime?",
+      levels:["Not Applicable","In config files / env vars","Key Vault used, some secrets still in config","All secrets in Key Vault with rotation & access policies"]},
+    {id:"ce_parity", title:"Environment Parity", desc:"Do dev / stage / prod match?",
+      levels:["Not Applicable","Environments differ significantly","Configs aligned but manual drift","Fully codified, identical topology across envs"]},
+  ]},
+  {area:"Continuous Delivery", caps:[
+    {id:"cd_app", title:"Application Deployment", desc:"How do you ship application code?",
+      levels:["Not Applicable","Not done","Manual","Automated pipeline to production"]},
+    {id:"cd_db", title:"Database Deployment", desc:"How do DB changes reach production?",
+      levels:["Not Applicable","No defined process","Manual scripts or UI","Automated pipeline with rollback & approvals"]},
+    {id:"cd_strategy", title:"Deployment Strategy", desc:"How do you reduce blast radius?",
+      levels:["Not Applicable","Big-bang deploys (full replace)","Rolling deploys (one server at a time)","Blue/green or canary with automated health checks"]},
+    {id:"cd_rollback", title:"Rollback Capability", desc:"Can you recover from a bad deploy quickly?",
+      levels:["Not Applicable","No tested rollback","Manual rollback process (documented but slow)","One-click automated rollback, tested regularly"]},
+    {id:"cd_flags", title:"Feature Flags", desc:"Decouple deploy from release.",
+      levels:["Not Applicable","No feature flags","Custom flags in code (developer-managed)","Centralized feature flag platform with targeting (LaunchDarkly, Azure App Config)"]},
+  ]},
+  {area:"Continuous Monitoring", caps:[
+    {id:"cm_alert", title:"Alerting & Monitoring", desc:"Observability of production systems.",
+      levels:["Not Applicable","No alerts","Manual alerts, limited coverage","Full-stack observability with SLOs and noise-reduced alerts"]},
+    {id:"cm_cost", title:"Infra Cost Reporting", desc:"Is cloud spend visible and forecasted?",
+      levels:["Not Applicable","No tracking","Manual reports from cloud dashboard","Automated tools (Infracost, Azure Cost Mgmt, AWS CE)"]},
+    {id:"cm_apm", title:"APM / Performance Monitoring", desc:"App-level performance insight.",
+      levels:["Not Applicable","Not onboarded (no APM tool)","Basic metrics only (CPU, memory)","Full APM (App Insights/Datadog) with distributed tracing"]},
+    {id:"cm_incident", title:"Incident Response", desc:"Formal on-call & runbook process.",
+      levels:["Not Applicable","No process","Informal, reactive (whoever notices responds)","On-call rotations, runbooks, blameless post-mortems"]},
+    {id:"cm_seclog", title:"Security Monitoring", desc:"Runtime security / SIEM alerts.",
+      levels:["Not Applicable","No security monitoring","Cloud-native security alerts (Defender, GuardDuty)","SIEM with correlation and response playbooks (Sentinel, Splunk)"]},
+  ]},
+];
+
+// === Recommendations library ===
+const RECS = {
+  cp_board: ["Move all work to Azure Boards / GitHub Projects with a clear Epic → Feature → Story hierarchy.","Add a dashboard showing burn-down, velocity, and WIP."],
+  cp_wow: ["Introduce daily stand-ups and sprint planning as a minimum.","Schedule bi-weekly retrospectives and act on at least one improvement per sprint."],
+  cp_dora: ["Start tracking the 4 DORA metrics: deployment frequency, lead time for changes, change failure rate, MTTR.","Pick one metric per quarter to improve."],
+  ci_repo: ["Enable branch protection on main and require PR reviews.","Add CODEOWNERS and enable secret scanning on the repo."],
+  ci_branch: ["Adopt trunk-based development or GitFlow consistently across repos.","Enforce merge rules via CI (no direct pushes to main)."],
+  ci_build: ["Move all builds to a CI pipeline triggered on commit/PR.","Add quality gates (tests, linting, security) before merge is allowed."],
+  ci_sca: ["Integrate SonarCloud/SonarQube into the CI pipeline.","Configure a Quality Gate that blocks PRs on critical bugs or low coverage."],
+  ci_ut: ["Start adding unit tests to new code with a target of ≥60% coverage on new PRs.","Wire the test runner into CI so tests run on every commit."],
+  ci_cov: ["Publish coverage reports from CI.","Fail the pipeline if coverage drops below a defined threshold."],
+  ci_lint: ["Add linters/formatters (ESLint, Prettier, Black, etc.).","Enforce via pre-commit hooks so problems never reach CI."],
+  cs_sast: ["Onboard Snyk or GitHub CodeQL across all repos.","Set severity thresholds that block PRs on critical findings."],
+  cs_dast: ["Start with OWASP ZAP or Burp scans against staging.","Automate DAST in the pipeline for major releases."],
+  cs_threat: ["Run a threat model workshop for every new service (STRIDE is a simple framework).","Make threat modelling a checklist item for significant architecture changes."],
+  cs_secrets: ["Enable GitHub/Azure DevOps secret scanning on all repos.","Add a pre-push hook (gitleaks) and fail CI on detected secrets."],
+  cs_deps: ["Turn on Dependabot or Renovate to auto-PR dependency updates.","Set a policy to merge critical/high security updates within X days."],
+  cs_container: ["Scan images with Trivy or Snyk Container during CI.","Block deploys of images above a CVE severity threshold."],
+  cs_iac: ["Add Checkov or tfsec to your IaC pipeline.","Treat IaC misconfigs like code bugs — block merges on high severity."],
+  cs_sbom: ["Generate an SBOM (CycloneDX/SPDX) from your build.","Work toward signed artifacts and SLSA Level 2+ provenance."],
+  ce_app: ["Convert any click-ops infrastructure to Terraform or Bicep.","Add drift detection and require PRs for infra changes."],
+  ce_db: ["Manage database infrastructure (server, elastic pool) via IaC.","Use a migration tool (Flyway, Liquibase, EF Migrations) for schema changes."],
+  ce_secrets: ["Move all secrets to Azure Key Vault (or equivalent).","Enable automatic rotation for keys that support it."],
+  ce_parity: ["Define one IaC module per environment with env-specific variables.","Automate provisioning so dev/stage/prod are topologically identical."],
+  cd_app: ["Replace manual deployments with a CI/CD pipeline using approval gates.","Add smoke tests post-deploy."],
+  cd_db: ["Put DB migrations in the deployment pipeline with rollback scripts.","Add a manual approval gate for prod DB changes."],
+  cd_strategy: ["Move from big-bang to rolling deploys as a first step.","Implement blue/green or canary for critical services with automated health checks."],
+  cd_rollback: ["Document the rollback procedure and test it quarterly.","Target one-click rollback via pipeline for all prod services."],
+  cd_flags: ["Adopt a feature-flag platform (LaunchDarkly, Azure App Config, Unleash).","Use flags to separate deploy from release — ship dark, enable later."],
+  cm_alert: ["Define SLOs for your top user journeys.","Tune alerts to SLO burn rate to cut noise; invest in dashboards over individual alerts."],
+  cm_cost: ["Enable cost tags per app/team.","Add Infracost or Azure Cost Management to your workflow with monthly reviews."],
+  cm_apm: ["Instrument services with Application Insights, Datadog, or equivalent.","Enable distributed tracing so you can follow a request across services."],
+  cm_incident: ["Set up an on-call rotation with PagerDuty or Azure Monitor Action Groups.","Run blameless post-mortems for every Sev1/Sev2 and track action items."],
+  cm_seclog: ["Forward logs to a SIEM (Sentinel, Splunk).","Define detection rules for your top 5 threats and associated playbooks."],
+};
+
+// === Render ===
+const root = document.getElementById("assessment");
+ASSESSMENT.forEach((a, ai)=>{
+  const area = document.createElement("div");
+  area.className = "area";
+  area.innerHTML = `
+    <div class="area-header"><h2>${a.area}</h2><span class="area-score" id="as_${ai}">— / 3</span></div>
+    <div class="area-body" id="ab_${ai}"></div>`;
+  const body = area.querySelector(`#ab_${ai}`);
+  a.caps.forEach(c=>{
+    const cap = document.createElement("div");
+    cap.className = "cap";
+    cap.innerHTML = `
+      <div class="cap-head">
+        <div>
+          <div class="cap-title">${c.title}</div>
+          <div class="cap-desc">${c.desc}</div>
+        </div>
+        <select data-id="${c.id}" data-area="${ai}">
+          <option value="">Select rating…</option>
+          <option value="0">0 — Not Applicable</option>
+          <option value="1">1 — ${c.levels[1]}</option>
+          <option value="2">2 — ${c.levels[2]}</option>
+          <option value="3">3 — ${c.levels[3]}</option>
+        </select>
+      </div>
+      <div class="levels">
+        ${c.levels.map((l,i)=>`<div class="level"><b>Level ${i}</b>${l}</div>`).join("")}
+      </div>`;
+    body.appendChild(cap);
+  });
+  root.appendChild(area);
+});
+
+document.querySelectorAll("select[data-id]").forEach(s=> s.addEventListener("change", updateScores));
+document.getElementById("assessDate").valueAsDate = new Date();
+
+function ratingToBadge(score){
+  if(score===null) return {label:"—", cls:"b-na"};
+  if(score < 0.5) return {label:"Basic", cls:"b-basic"};
+  if(score < 0.8) return {label:"Emerging", cls:"b-emerging"};
+  return {label:"Mature", cls:"b-mature"};
+}
+
+function computeScores(){
+  const areaScores = ASSESSMENT.map((a, ai)=>{
+    const vals = a.caps.map(c=>{
+      const el = document.querySelector(`select[data-id="${c.id}"]`);
+      return el.value === "" ? null : parseInt(el.value,10);
+    });
+    const scored = vals.filter(v => v !== null && v !== 0);
+    const sum = scored.reduce((s,v)=>s+v,0);
+    const max = scored.length * 3;
+    const pct = max > 0 ? sum/max : null;
+    return {area:a.area, idx:ai, caps:a.caps, vals, pct};
+  });
+  const overallCounts = areaScores.filter(a=>a.pct!==null);
+  const overallPct = overallCounts.length ? overallCounts.reduce((s,a)=>s+a.pct,0)/overallCounts.length : null;
+  return {areaScores, overallPct};
+}
+
+function updateScores(){
+  const {areaScores, overallPct} = computeScores();
+  const sidebar = document.getElementById("areaScores");
+  sidebar.innerHTML = areaScores.map(a=>{
+    const b = ratingToBadge(a.pct);
+    return `<div class="area-row"><span>${a.area}</span><span class="badge ${b.cls}">${b.label}</span></div>`;
+  }).join("");
+  areaScores.forEach(a=>{
+    const scored = a.vals.filter(v=>v!==null && v!==0);
+    const sum = scored.reduce((s,v)=>s+v,0);
+    const max = scored.length * 3;
+    document.getElementById(`as_${a.idx}`).textContent = max>0?`${sum} / ${max}`:"—";
+  });
+  const o = ratingToBadge(overallPct);
+  const card = document.getElementById("overallCard");
+  const val = document.getElementById("overallVal");
+  val.textContent = o.label;
+  card.style.background = o.cls==="b-basic"?"#fef2f2":o.cls==="b-emerging"?"#fff8ed":o.cls==="b-mature"?"#ecfdf5":"#f1f5f9";
+  card.style.color = o.cls==="b-basic"?"#991b1b":o.cls==="b-emerging"?"#92400e":o.cls==="b-mature"?"#065f46":"#475569";
+}
+
+function generateRecs(){
+  const {areaScores} = computeScores();
+  const panel = document.getElementById("recsPanel");
+  const list = document.getElementById("recsList");
+  const items = [];
+  areaScores.forEach(a=>{
+    a.caps.forEach((c,i)=>{
+      const v = a.vals[i];
+      if(v === null || v === 0) return;
+      if(v < 3){
+        const cls = v===1 ? "basic" : "";
+        items.push({
+          cls,
+          title:`${a.area} · ${c.title} (current level: ${v})`,
+          bullets: RECS[c.id] || []
+        });
+      }
+    });
+  });
+  if(items.length===0){
+    list.innerHTML = `<div class="rec-item mature"><h4>No gaps found 🎉</h4>All rated capabilities are at Mature level. Consider adding stretch goals or reviewing cross-team consistency.</div>`;
+  } else {
+    list.innerHTML = items.map(i=>`
+      <div class="rec-item ${i.cls}">
+        <h4>${i.title}</h4>
+        <ul>${i.bullets.map(b=>`<li>${b}</li>`).join("")}</ul>
+      </div>`).join("");
+  }
+  panel.style.display = "block";
+  panel.scrollIntoView({behavior:"smooth"});
+}
+
+function exportJSON(){
+  const data = {
+    appName: document.getElementById("appName").value,
+    team: document.getElementById("team").value,
+    assessDate: document.getElementById("assessDate").value,
+    answers:{}
+  };
+  document.querySelectorAll("select[data-id]").forEach(s=>{ data.answers[s.dataset.id] = s.value; });
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const name = (data.appName||"assessment").replace(/\s+/g,"_");
+  a.href = url; a.download = `devsecops_${name}_${data.assessDate||"draft"}.json`;
+  a.click();
+}
+
+function loadJSON(){
+  const input = document.getElementById("jsonLoader");
+  input.onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ev=>{
+      const d = JSON.parse(ev.target.result);
+      document.getElementById("appName").value = d.appName||"";
+      document.getElementById("team").value = d.team||"";
+      document.getElementById("assessDate").value = d.assessDate||"";
+      Object.entries(d.answers||{}).forEach(([k,v])=>{
+        const s = document.querySelector(`select[data-id="${k}"]`);
+        if(s) s.value = v;
+      });
+      updateScores();
+    };
+    r.readAsText(f);
+  };
+  input.click();
+}
+
+updateScores();
+</script>
+</body>
+</html>
